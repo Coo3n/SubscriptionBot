@@ -20,13 +20,30 @@ class DataBase:
         self.cursor.execute("INSERT INTO `users_bot` (user_id) VALUES(\"" + str(user_id) + "\")")
         self.connection.commit()    
     
-    #Возвращает количество денег пользователя
-    async def get_user_money(self, user_id):
-        self.cursor.execute("SELECT `cnt_money` FROM `users_bot` WHERE `user_id` = " + str(user_id))
+    #Возвращает тариф пользователя
+    async def get_tarif_user(self, user_id):
+        self.cursor.execute("SELECT `number_rate` FROM `users_bot` WHERE `user_id` = " + str(user_id))
         return self.cursor.fetchmany(1)
 
-    #Устанавливаем количество денег пользователю
-    async def set_money_to_user(self, user_id, money):
-        self.cursor.execute("UPDATE `users_bot` SET `cnt_money` = " + str(money) + ", `date_of_payment` = now() WHERE user_id = " + str(user_id))
+    #Устанавливаем тариф пользователю
+    async def set_rate_to_user(self, user_id, number_rate):
+        self.cursor.execute("UPDATE `users_bot` SET `number_rate` = " + str(number_rate) + ", `date_of_payment` = now() WHERE user_id = " + str(user_id))
         self.connection.commit()        
         
+    #Добавляем чек в базу данных      
+    async def add_check(self, user_id, number_rate):
+        self.cursor.execute("INSERT INTO `bill_check` (user_id, number_rate) VALUES(" + str(user_id) + ", \"" + str(number_rate)  + "\")")
+        self.connection.commit()    
+
+    #Смотрим есть ли такой чек в базе 
+    async def exist_bill_сheck(self, user_id):
+        self.cursor.execute("SELECT * FROM `bill_check` WHERE `user_id` = " + str(user_id))
+        return len(self.cursor.fetchmany(1)) != 0
+
+    #Удаляем чек 
+    async def delete_check(self, user_id):
+        self.cursor.execute("SET SQL_SAFE_UPDATES = 0")
+        self.connection.commit()    
+        self.cursor.execute("DELETE FROM `bill_check` WHERE `user_id` = \"" + str(user_id) + "\"")
+        self.connection.commit()    
+
