@@ -1,0 +1,48 @@
+####################################################
+###################### STEP 1 ######################
+####################################################
+
+R-URL: https://api.qiwi.com/partner/bill/v1/bills/WhiteApfel-PyQiwiP2P-2
+URL: https://api.qiwi.com/partner/bill/v1/bills/WhiteApfel-PyQiwiP2P-2
+Code: 404 Not Found
+Method: GET
+
+##################### REQUEST ######################
+Headers:
+
+Host:           api.qiwi.com
+Accept:         */*
+Accept-Encoding: gzip, deflate
+Connection:     keep-alive
+User-Agent:     python-httpx/0.23.0
+Content-Type:   application/json
+Authorization:  Bearer eyJ2ZXJzaW9uIjoiUDJQIiwiZGF0YSI6eyJwYXlpbl9tZXJjaGFudF9zaXRlX3VpZCI6IjdwN3FieC0wMCIsInVzZXJfaWQiOiI3OTIxMTg5OTQzNCIsInNlY3JldCI6IjZkMjY0NTI4MDg2Nzc1MzRlZjEzMTU1OTFmNzA5OGNmYTQ0M2Y3NjkyODYxMmI4ZGIyOTU0ZjJkODIyOTJkZTQifX0=
+
+########### CONTENT ############
+
+######### END CONTENT ##########
+
+##################### RESPONSE #####################
+
+Headers:
+
+Server:         nginx
+Date:           Sun, 22 Jan 2023 23:42:34 GMT
+Content-Type:   application/json
+Content-Length: 205
+Connection:     keep-alive
+Cache-Control:  no-cache, no-store
+X-B3-SpanId:    dae303316332d4e6
+X-B3-SpanId:    5f5c4df4c148860d
+X-Edge-Proxied-Response: true
+Expires:        Thu, 01 Jan 1970 00:00:00 GMT
+X-B3-ParentSpanId: 01dd296c169a0b55
+X-B3-TraceId:   b04e4a01d23b6d50
+content-encoding: gzip
+Strict-Transport-Security: max-age=31536000
+X-Content-Type-Options: nosniff
+
+########### CONTENT ############
+{"serviceName":"payin-invoicing-api","errorCode":"api.invoice.not.found","description":"—чЄт не найден","userMessage":"—чЄт не найден","dateTime":"2023-01-23T02:42:34.673+03:00","traceId":"b04e4a01d23b6d50"}
+######### END CONTENT ##########
+

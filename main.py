@@ -17,7 +17,7 @@ dispetcher = Dispatcher(bot, storage = storage)
 db = DataBase()
 qiwi = QiwiP2P(auth_key = QIWI_TOKEN)
 
-TELEGRAM_CHAT_ID = -1001635609543
+TELEGRAM_CHAT_ID = "-1001726136323"
 RATE_MONTH      = 1
 RATE_SIX_MONTHS = 2
 RATE_YEAR       = 3
@@ -53,6 +53,7 @@ async def show_user_account(message: types.Message):
     
 
 @dispetcher.message_handler(Text(equals = "🗓 Тарифные планы"))
+@dispetcher.throttled(anti_flood, rate = 1)
 async def show_all_rates(message: types.Message):
     await bot.delete_message(message.from_user.id, message.message_id)
     await message.answer("🗓 Тарифные планы \nВыбирай любой подходящий для себя тариф и производи оплату по 🥝QIWI!", reply_markup = kb.choice_menu_rate)
@@ -69,7 +70,7 @@ async def top_up_balance_month(query: types.CallbackQuery):
 
     bill = qiwi.bill(amount = 150, lifetime = 5, comment = "Время оплаты - 5 минут!")
     
-    await db.add_check(query.from_user.id, RATE_MONTH)
+    await db.add_check(query.from_user.id, bill.bill_id[21:], RATE_MONTH)
     await bot.send_message(query.from_user.id, 
                     '⏳ Счет на оплату ⏳\n\n'
                     'Информация:\n'
@@ -95,7 +96,7 @@ async def top_up_balance_six_month(query: types.CallbackQuery):
 
     bill = qiwi.bill(amount = 250, lifetime = 5, comment = "Время оплаты - 5 минут!")
     
-    await db.add_check(query.from_user.id, RATE_SIX_MONTHS)
+    await db.add_check(query.from_user.id, bill.bill_id[21:], RATE_SIX_MONTHS)
     await bot.send_message(query.from_user.id, 
                     '⏳ Счет на оплату ⏳\n\n'
                     'Информация:\n'
@@ -119,7 +120,7 @@ async def top_up_balance_year(query: types.CallbackQuery):
 
     bill = qiwi.bill(amount = 500, lifetime = 5, comment = "Время оплаты - 5 минут!")
     
-    await db.add_check(query.from_user.id, RATE_YEAR)
+    await db.add_check(query.from_user.id, bill.bill_id[21:], RATE_YEAR)
     await bot.send_message(query.from_user.id, 
                     '⏳ Счет на оплату ⏳\n\n'
                     'Информация:\n'
@@ -130,6 +131,7 @@ async def top_up_balance_year(query: types.CallbackQuery):
                     '— Канал «🔥Архив Хентай🔥»\n\n'
                     
                     f'Ссылка на оплату по QIWI 🥝:\n{bill.pay_url}', reply_markup = kb.payment_menu)
+
 
 @dispetcher.callback_query_handler(text = "rate_forever")
 async def top_up_balance_forever(query: types.CallbackQuery):
@@ -142,7 +144,7 @@ async def top_up_balance_forever(query: types.CallbackQuery):
 
     bill = qiwi.bill(amount = 800, lifetime = 5, comment = "Время оплаты - 5 минут!")
     
-    await db.add_check(query.from_user.id, RATE_FOREVER)
+    await db.add_check(query.from_user.id, bill.bill_id[21:], RATE_FOREVER)
     await bot.send_message(query.from_user.id, 
                     '⏳ Счет на оплату ⏳\n\n'
                     'Информация:\n'
@@ -164,24 +166,46 @@ async def close_payment_check(query: types.CallbackQuery):
     
     await bot.delete_message(query.from_user.id, query.message.message_id)
 
+
 @dispetcher.callback_query_handler(text = "check_payment")
+@dispetcher.throttled(anti_flood, rate = 1.5)
 async def check_payment(query: types.CallbackQuery):
     await query.answer("✅ Проверить оплату ✅")
     
     if await db.exist_bill_сheck(query.from_user.id) == False:
         await bot.delete_message(query.from_user.id, query.message.message_id)
-        await bot.send_message(query.from_user.id, "🚩 Данной оплаты не существует!\nПопробуйте заново! 🚩") 
+        await bot.send_message(query.from_user.id, "🚩 Данной оплаты не существует! 🚩") 
+        return None
+    
+    info_for_check = await db.get_info_for_check(query.from_user.id)               
+        
+    if len(info_for_check) != 0:
+        status_bill_check = str(qiwi.check(bill_id = "WhiteApfel-PyQiwiP2P-" + str(info_for_check[0][2])).status)
+        
+        match status_bill_check:
+            case "WAITING":
+                await bot.send_message(query.from_user.id, "Счёт находиться в стадии ожидании оплаты!")
+            case "PAID":
+                await db.delete_check(query.from_user.id)
+                await db.set_rate_to_user(query.from_user.id, info_for_check[0][3])
+                link_group = await create_link_to_group()
+                await bot.send_message(query.from_user.id, "Вы успешно оплатили счет!\nСсылка на канал:\n" + str(link_group))
+            case "EXPIRED":
+                await db.delete_check(query.from_user.id)
+                await bot.send_message(query.from_user.id, "Время жизни счёта истекло, попробуйте начать оплату заново!")
+            case _:
+                await db.delete_check(query.from_user.id)
+                await bot.send_message(query.from_user.id, "Счёт по техническим причинам отклонён, попробуйте заново!")                     
     else: 
-        pass
+        await bot.send_message(query.from_user.id, "🚩 Данной оплаты не существует!\nПопробуйте заново! 🚩") 
 
 
 
-@dispetcher.message_handler(Text(equals = "link"))
-async def create_link_to_group(message: types.Message):
+async def create_link_to_group():
     expire_date = datetime.now() + timedelta(days = 1)
     link = await bot.create_chat_invite_link(TELEGRAM_CHAT_ID, expire_date.timestamp, 1)
+    return link.invite_link 
 
-    print(link.invite_link) 
 
 if __name__ == '__main__':
     executor.start_polling(dispetcher, skip_updates = True)

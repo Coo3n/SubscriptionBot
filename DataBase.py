@@ -31,14 +31,19 @@ class DataBase:
         self.connection.commit()        
         
     #Добавляем чек в базу данных      
-    async def add_check(self, user_id, number_rate):
-        self.cursor.execute("INSERT INTO `bill_check` (user_id, number_rate) VALUES(" + str(user_id) + ", \"" + str(number_rate)  + "\")")
+    async def add_check(self, user_id, bill_id, number_rate):
+        f = "INSERT INTO `bill_check` (user_id, bill_id, number_rate) VALUES(" + str(user_id) + ", \"" + str(bill_id) + "\", " + str(number_rate)  + ")"
+        self.cursor.execute("INSERT INTO `bill_check` (user_id, bill_id, number_rate) VALUES(" + str(user_id) + ", \"" + str(bill_id) + "\", " + str(number_rate)  + ")")
         self.connection.commit()    
 
     #Смотрим есть ли такой чек в базе 
     async def exist_bill_сheck(self, user_id):
         self.cursor.execute("SELECT * FROM `bill_check` WHERE `user_id` = " + str(user_id))
         return len(self.cursor.fetchmany(1)) != 0
+
+    async def get_info_for_check(self, user_id):
+        self.cursor.execute("SELECT * FROM `bill_check` WHERE `user_id` = " + str(user_id))
+        return self.cursor.fetchmany(1)
 
     #Удаляем чек 
     async def delete_check(self, user_id):
