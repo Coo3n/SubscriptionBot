@@ -23,16 +23,25 @@ class DataBase:
         self.cursor.execute("INSERT INTO `users_bot` (user_id) VALUES(\"" + str(user_id) + "\")")
         self.connection.commit()    
     
-    #Возвращает тариф пользователя
-    async def get_tarif_user(self, user_id):
-        self.cursor.execute("SELECT `number_rate` FROM `users_bot` WHERE `user_id` = " + str(user_id))
-        return self.cursor.fetchmany(1)
-
     #Устанавливаем тариф пользователю
     async def set_rate_to_user(self, user_id, number_rate):
         self.cursor.execute("UPDATE `users_bot` SET `number_rate` = " + str(number_rate) + ", `date_of_payment` = now() WHERE user_id = " + str(user_id))
-        self.connection.commit()        
+        self.connection.commit()  
+
+    #Возвращает тариф пользователя
+    async def get_tarif_user(self, user_id):
+        self.cursor.execute("SELECT `number_rate` FROM `users_bot` WHERE `user_id` = " + str(user_id))
+        return self.cursor.fetchmany(1)      
         
+       #Берем дату оплаты подписки
+    async def get_date_of_payment_user(self, user_id):
+        self.cursor.execute("SELECT `date_of_payment` FROM `users_bot` WHERE `user_id` = " + str(user_id))
+        return self.cursor.fetchmany(1)
+
+    async def get_all_user(self):
+        self.cursor.execute("SELECT `user_id` FROM  `users_bot`")
+        return self.cursor.fetchall()
+          
     #Добавляем чек в базу данных      
     async def add_check(self, user_id, bill_id, number_rate):
         self.cursor.execute("INSERT INTO `bill_check` (user_id, bill_id, number_rate) VALUES(" + str(user_id) + ", \"" + str(bill_id) + "\", " + str(number_rate)  + ")")
@@ -55,7 +64,4 @@ class DataBase:
         self.cursor.execute("DELETE FROM `bill_check` WHERE `user_id` = \"" + str(user_id) + "\"")
         self.connection.commit()    
 
-    #Берем дату оплаты подписки
-    async def get_date_of_payment_user(self, user_id):
-        self.cursor.execute("SELECT `date_of_payment` FROM `users_bot` WHERE `user_id` = " + str(user_id))
-        return self.cursor.fetchmany(1)
+
